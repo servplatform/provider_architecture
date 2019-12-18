@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:provider_start/core/constant/api_routes.dart';
 import 'package:provider_start/core/constant/network_exception_messages.dart';
 import 'package:provider_start/core/exceptions/network_exception.dart';
 import 'package:provider_start/core/services/http/http_service.dart';
-import 'package:provider_start/core/utils/file_utils.dart' as fileUtils;
-import 'package:provider_start/core/utils/network_utils.dart' as networkUtils;
+import 'package:provider_start/core/utils/file_utils.dart' as file_utils;
+import 'package:provider_start/core/utils/logger.dart';
+import 'package:provider_start/core/utils/network_utils.dart' as network_utils;
 
 /// Helper service that abstracts away common HTTP Requests
 class HttpServiceImpl implements HttpService {
@@ -21,7 +21,7 @@ class HttpServiceImpl implements HttpService {
   Future<dynamic> getHttp(String route) async {
     Response response;
 
-    debugPrint('(TRACE) Sending GET to ${ApiRoutes.base_url}/$route');
+    Logger.d('Sending GET to ${ApiRoutes.base_url}/$route');
 
     try {
       final fullRoute = '${ApiRoutes.base_url}/$route';
@@ -31,11 +31,12 @@ class HttpServiceImpl implements HttpService {
           contentType: 'application/json',
         ),
       );
-    } catch (_) {
+    } on DioError catch (e) {
+      Logger.e(e.message, e: e, s: StackTrace.current);
       throw NetworkException(NetworkExceptionMessages.general);
     }
 
-    networkUtils.checkForNetworkExceptions(response);
+    network_utils.checkForNetworkExceptions(response);
 
     // For this specific API its decodes json for us
     return response.data;
@@ -49,24 +50,25 @@ class HttpServiceImpl implements HttpService {
   Future<dynamic> postHttp(String route, dynamic body) async {
     Response response;
 
-    debugPrint('(TRACE) Sending $body to ${ApiRoutes.base_url}/$route');
+    Logger.d('Sending $body to ${ApiRoutes.base_url}/$route');
 
     try {
       final fullRoute = '${ApiRoutes.base_url}/$route';
       response = await _dio.post(
         fullRoute,
         data: body,
-        onSendProgress: networkUtils.showLoadingProgress,
-        onReceiveProgress: networkUtils.showLoadingProgress,
+        onSendProgress: network_utils.showLoadingProgress,
+        onReceiveProgress: network_utils.showLoadingProgress,
         options: Options(
           contentType: 'application/json',
         ),
       );
-    } catch (_) {
+    } on DioError catch (e) {
+      Logger.e(e.message, e: e, s: StackTrace.current);
       throw NetworkException(NetworkExceptionMessages.general);
     }
 
-    networkUtils.checkForNetworkExceptions(response);
+    network_utils.checkForNetworkExceptions(response);
 
     // For this specific API its decodes json for us
     return response.data;
@@ -86,7 +88,7 @@ class HttpServiceImpl implements HttpService {
 
     final formData = FormData.fromMap(body);
     files?.forEach((file) async {
-      final mFile = await fileUtils.convertFileToMultipartFile(file);
+      final mFile = await file_utils.convertFileToMultipartFile(file);
       formData.files.add(MapEntry('file$index', mFile));
       index++;
     });
@@ -103,20 +105,27 @@ class HttpServiceImpl implements HttpService {
   Future<File> downloadFile(String fileUrl) async {
     Response response;
 
-    final file = await fileUtils.getFileFromUrl(fileUrl);
+    final file = await file_utils.getFileFromUrl(fileUrl);
 
     try {
       response = await _dio.download(
         fileUrl,
         file.path,
-        onReceiveProgress: networkUtils.showLoadingProgress,
+        onReceiveProgress: network_utils.showLoadingProgress,
       );
-    } catch (_) {
+    } on DioError catch (e) {
+      Logger.e(e.message, e: e, s: StackTrace.current);
       throw NetworkException(NetworkExceptionMessages.general);
     }
 
-    networkUtils.checkForNetworkExceptions(response);
+    network_utils.checkForNetworkExceptions(response);
 
     return file;
+  }
+
+  @override
+  void dispose() {
+    _dio.clear();
+    _dio.close(force: true);
   }
 }

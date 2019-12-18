@@ -9,22 +9,14 @@ import 'package:provider_start/core/services/connectivity/connectivity_service.d
 import 'package:provider_start/core/services/connectivity/connectivity_service_impl.dart';
 import 'package:provider_start/core/services/dialog/dialog_service.dart';
 import 'package:provider_start/core/services/dialog/dialog_service_impl.dart';
-import 'package:provider_start/core/services/hardware/hardware_service.dart';
-import 'package:provider_start/core/services/hardware/hardware_service_impl.dart';
-import 'package:provider_start/core/services/http/http_service.dart';
-import 'package:provider_start/core/services/http/http_service_impl.dart';
+import 'package:provider_start/core/services/hardware_info/hardware_info_service.dart';
+import 'package:provider_start/core/services/hardware_info/hardware_info_service_impl.dart';
 import 'package:provider_start/core/services/key_storage/key_storage_service.dart';
 import 'package:provider_start/core/services/key_storage/key_storage_service_impl.dart';
 import 'package:provider_start/core/services/local_storage/local_storage_service.dart';
 import 'package:provider_start/core/services/local_storage/local_storage_service_impl.dart';
 import 'package:provider_start/core/services/navigation/navigation_service.dart';
 import 'package:provider_start/core/services/navigation/navigation_service_impl.dart';
-import 'package:provider_start/core/ui_models/views/home_model.dart';
-import 'package:provider_start/core/ui_models/views/login_model.dart';
-import 'package:provider_start/core/ui_models/views/main_model.dart';
-import 'package:provider_start/core/ui_models/views/post_details_model.dart';
-import 'package:provider_start/core/ui_models/views/settings_model.dart';
-import 'package:provider_start/core/ui_models/widgets/animated_list_item_model.dart';
 
 GetIt locator = GetIt.instance;
 
@@ -41,26 +33,16 @@ Future<void> setupLocator() async {
   locator.registerLazySingleton<NavigationService>(
     () => NavigationServiceImpl(),
   );
-  locator.registerLazySingleton<HardwareService>(() => HardwareServiceImpl());
+  locator.registerLazySingleton<HardwareInfoService>(
+      () => HardwareInfoServiceImpl());
   locator.registerLazySingleton<ConnectivityService>(
     () => ConnectivityServiceImpl(),
   );
   locator.registerLazySingleton<DialogService>(() => DialogServiceImpl());
-  locator.registerLazySingleton<HttpService>(() => HttpServiceImpl());
   locator.registerLazySingleton<AuthService>(() => AuthServiceImpl());
   locator.registerLazySingleton<LocalStorageService>(
     () => LocalStorageServiceImpl(),
   );
-
-  // View view models
-  locator.registerFactory(() => HomeModel());
-  locator.registerFactory(() => SettingsModel());
-  locator.registerFactory(() => LoginModel());
-  locator.registerFactory(() => MainModel());
-  locator.registerFactory(() => PostDetailsModel());
-
-  // Widget view models
-  locator.registerFactory(() => AnimatedListItemModel());
 
   await initializeServices();
 }
